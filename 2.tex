@@ -1,0 +1,121 @@
+\documentclass[RL]{subfiles}
+
+%% ========================================================
+%% document
+
+\begin{document}
+
+    \section{Markov Decision Processes}
+
+    As mentioned in Section 1, \textit{Markov decision processes} (MDPs) formally describe an environment for RL when the environment is \textit{fully observable}. That is, the current state completely characterizes the process. The nice thing about MDPs is that most RL problems can be formalized in to MDPs. For instance,
+    \begin{enumerate}
+        \item optimal constrol primarily deals with continuous MDPs;
+        \item partially observable problems can be converted in to MDPs; and
+        \item bandits are MDPs with one state. 
+    \end{enumerate}
+
+    \subsection{Markov Processes}
+
+    Let us start by recalling the definition of \textit{Markov property}.
+
+    \begin{recall}{\textbf{Markov Process}}
+        A \emph{stochastic process} is a sequence $\left( X_{t} \right)^{}_{t}$ of random variables.
+
+        We say a stochastic process $\left( S_{t} \right)^{}_{t}$ is \emph{Markov} if
+        \begin{equation*}
+            \PP\left( S_{t+1}|S_t,\ldots,S_1 \right) = \PP\left( S_{t+1}|S_t \right).
+        \end{equation*}
+    \end{recall}
+
+    \np For a Markov state $s$ and successor state $s'$, the \emph{state transition probability}, denoted as $\mP_{ss'}$, is defined by
+    \begin{equation*}
+        \mP_{ss'} = \PP\left( S_{t+1}=s' | S_t=s \right).
+    \end{equation*}
+    The \emph{state transition matrix} $\mP$ defines transition probabilities from all states $s$ to all successor states $s'$,
+    \begin{equation*}
+        \mP = 
+        \begin{bmatrix}
+            \mP_{11} & \cdots & \mP_{1n} \\
+            \vdots & \ddots & \vdots \\
+            \mP_{n1} & \cdots & \mP_{nn} \\
+        \end{bmatrix}.
+    \end{equation*}
+    This means we can characterize a Markov process $\left( S_{t} \right)^{}_{t}$ by a pair $\left( \mS,\mP \right)$, where $\mS$ is the (finite) set ofpossible states and $\mP$ is the state transition matrix. For this reason, we shall also call $\left( \mS,\mP \right)$ a \emph{Markov process}.
+
+    \begin{definition}{\textbf{Markov Reward Process}}
+        A \emph{Markov reward process} (\emph{MRP}) is a tuple $\left( \mS,\mP,\mR,\gamma \right)$ such that 
+        \begin{enumerate}
+            \item $\left( \mS,\mP \right)$ is a Markov process;
+            \item $\mR$ is a \emph{reward function} with
+                \begin{equation*}
+                    \mR_s = \EE\left( R_{t+1}|S_t=s \right)
+                \end{equation*}
+                for all $s\in\mS$;\footnotemark[1] and
+            \item $\gamma\in\left[ 0,1 \right]$, called the \emph{discount factor}.
+        \end{enumerate}
+        
+        \noindent
+        \begin{minipage}{\textwidth}
+            \footnotetext[1]{$R_{t}$ represents the \emph{reward} at step $t$.}
+        \end{minipage}
+    \end{definition}
+
+    \begin{definition}{\textbf{Return}}
+        The \emph{return} from step $t$, denoted as $G_t$, is the total discounted reward from $t$:
+        \begin{equation*}
+            G_t = \sum^{\infty}_{k=0}\gamma^k R_{t+k+1} = R_t + \gamma R_{t+1} + \gamma^{2}R_{t+2} + \cdots.
+        \end{equation*}
+    \end{definition}
+
+    \np According to the definition of $G_t$, the value of receiving reward $R$ after $k+1$ steps is $\gamma^kR$, so $G_t$ values immediate reward above delayed reward. Specifically, $\gamma\approx 0$ leads to \emph{myopic} evaluation whereas $\gamma\approx 1$ leads to \emph{far-sighted} evaluation.
+
+    \np One reason that we use a discount factor is because of the \textit{uncertainty} in the future. To put this in another way, we \textit{do not} have a perfect model of the environment. 
+
+    Another reason is for mathematical convenience: by using discount rewards, we can avoid infinte returns (e.g. in cyclic Markov processes).
+
+    \begin{definition}{\textbf{State Value Function}}
+        The \emph{state value function}, denoted as $v\left( s \right)$, of an MRP is the expectation of $G_t$ starting from state $s$:
+        \begin{equation*}
+            v\left( s \right) = \EE\left( G_t|S_t=s \right).
+        \end{equation*}
+    \end{definition}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    
+    
+    
+
+\end{document}

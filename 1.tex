@@ -1,0 +1,240 @@
+\documentclass[RL]{subfile}
+
+%% ========================================================
+%% document
+
+\begin{document}
+
+    \section{Introduction to Reinforcement Learning}
+
+    \subsection{Introduction}
+
+    Reinforcement learning (RL) is a science of \textit{decision-making}. We are going to discuss RL from the perspective of machine learning (ML).
+    \begin{equation}
+        \text{\textit{What makes RL different from other ML algorithms (e.g. supervised/unsupervised learning)?}}
+    \end{equation}
+    \begin{enumerate}
+        \item There is no supervisor, only a \textit{reward} signal.
+        \item Feedback is delayed, not instantaneous.
+        \item Time really matters (i.e. sequential, non iid data is supplied).
+        \item \textit{Agent}'s action affect the subsequent data it receives.
+    \end{enumerate}
+    
+    \begin{example}{Examples of RL}
+        \vspace{-11pt}
+        \begin{enumerate}
+            \item Fly stunt manoeuvering in a helicopter.
+            \item Playing Backgammon.
+            \item Managing an investment portfolio.
+            \item Controlling a power station.
+            \item Making a humanoid robot walk.
+            \item Playing Atari games.
+        \end{enumerate}
+    \end{example}
+
+    \rruleline
+
+    \subsection{The RL Problem}
+    
+    \begin{definition}{\textbf{Reward}}
+        A \emph{reward} $R_t$ at \emph{step} $t$ is a scalar feedback signal indicating how well agent is doing at step $t$.
+    \end{definition}
+
+    \np The job of an RL agent is to maximize cumulative reward. RL is based on the following hypothesis.
+
+    \begin{statement}{Reward Hypothesis}
+        Goals can be described by maximization of expected cumulative reward.
+    \end{statement}
+
+    \rruleline
+
+    \np As a consequence of the above hypothesis, we have:
+    \begin{enumerate}
+        \item Actions may have long term sequence.
+        \item Reward may be delayed.
+        \it It may be better to sacrifice immediate reward to gain more long-term reward.
+    \end{enumerate}
+    For instance, in a financial investment, it may take months to mature.
+
+    \np We can describe RL by using the relationship between agent and environment: at each step $t$, the agent
+    \begin{enumerate}
+        \item executes action $A_t$ (towards the environment); and
+        \item receives observation $O_t$ and scalar reward $R_t$ from the environment.
+    \end{enumerate}
+    We repeat this over and over to train our agent.
+
+    \begin{definition}{\textbf{History}}
+        The \emph{history} $H_t$ at step $t$ is the sequence of observations, actions, rewards up to time $t$:
+        \begin{equation*}
+            H_t = \left( \left( A_i,O_i,R_i \right) \right)^{t}_{i=1} = \left( A_1,O_1,R_1 \right),\ldots,\left( A_t,O_t,R_t \right).
+        \end{equation*}
+    \end{definition}
+
+    \np \textit{What happens next} depends on the history. The agent select actions and the environment selects observations and rewards. But history is often too long, so instead we use less amount of information to determine what happens next.
+
+    \begin{definition}{\textbf{State}}
+        The \emph{state} $S_t$ at step $t$ is the information used to determine what happens at step $t+1$. 
+    \end{definition}
+
+    \np There are three parts of state.
+
+    \begin{definition}{\textbf{Environmental State}}
+        The \emph{environmental state} $S_t^e$ at step $t$ is the environment's private representation that spits out next observation and reward.
+    \end{definition}
+
+    \np The environment state is not usuall visible to the agent. Even if it is visible, it may contain irrelevant information.
+
+    \begin{definition}{\textbf{Agent State}}
+        The \emph{agent state} $S_t^a$ is the agent's internal representation the agent uses to pick the next action. Formally, it is a function of the history:
+        \begin{equation*}
+            S_t = f\left( H_t \right)
+        \end{equation*}
+        for some function $f$.
+    \end{definition}
+
+    \np When we speak of state, we shall always mean agent state.
+
+    \begin{definition}{\textbf{Markov} Sequence of State}
+        We say the sequence of states $\left( S_{t} \right)^{}_{t=1}$ is \emph{Markov} if
+        \begin{equation*}
+            \PP\left( S_{t+1}|S_1,\ldots,S_t \right) = \PP\left( S_{t+1}|S_t \right) 
+        \end{equation*}
+        for all $t$.
+    \end{definition}
+
+    \np In words, for a Markov process,
+    \begin{equation}
+        \text{\textit{the future independent of the past given the present.}}
+    \end{equation}
+    In other words, once $S_t$ is known, the history may be thrown away (i.e. the state $S_t$ is a sufficient statistic of the future). By definition, the environment state $S_t^e$ and the history $H_t$ are Markov.
+
+    \begin{definition}{\textbf{Fully Observable}, \textbf{Partially Observable} Environment}
+        A \emph{fully observable} environment is when the agent directly observes the environmental stae. That is,
+        \begin{equation*}
+            S_t^a = S_t^e.
+        \end{equation*}
+
+        Otherwise, we say that the environment is \emph{partially observable}.
+    \end{definition}
+
+    \np In a fully observable environment, $\left( S_{t} \right)^{}_{t=1}$ is a \textit{Markov decision process} (MDP), to which we will come back shortly.
+
+    \subsection{Inside an RL Agent}
+    
+    \np An RL agent may include one or more of these components.
+
+    \begin{definition}{\textbf{Policy}, \textbf{Value Function}, \textbf{Model} of an RL Agent}
+        The \emph{policy} $\pi$ of an RL agent is the agent's behaviour function. A \emph{deterministic} policy is a deterministic function from state $s$ to action $a$:
+        \begin{equation*}
+            a = \pi\left( s \right)
+        \end{equation*}
+        for all state $s$. A \emph{stochastic policy} has the form of 
+        \begin{equation*}
+            \pi\left( a|s \right) = \PP\left( A=a|S=s \right).
+        \end{equation*}
+        We desire $\pi$ such that we can get back as much rewards back as possible from $a$.
+
+        The \emph{value function} is the measure of how good is each state or action (i.e. a prediction of future reward). Formally,
+        \begin{equation*}
+            v_{\pi}\left( s \right) = \EE_{\pi}\left( R_t + \gamma R_{t+1} + \gamma^{2} R_{t+2} + \cdots | S_t = s  \right)
+        \end{equation*}
+        for some $\gamma\in\left[ 0,1 \right]$.\footnotemark[1]
+
+        The \emph{model} is the agent's representation of the environment that predicts what the environment will do next. There are two parts of a model. A \emph{transition} model $\mP$ predicts the next state:
+        \begin{equation*}
+            \mP^a_{ss'} = \PP\left( S'=s'| S=s, A=a \right).
+        \end{equation*}
+        A \emph{reward} model $\mR$ predicts the next reward:
+        \begin{equation*}
+            \mR^a_s = \EE\left( R| S=s, A=a \right).
+        \end{equation*}
+        
+        \noindent
+        \begin{minipage}{\textwidth}
+            \footnotetext[1]{The parameter $\gamma$ \textit{says} that we care about immediate rewards more than future rewards (unless future rewards are much larger).}
+        \end{minipage}
+    \end{definition}
+
+    \begin{definition}{\textbf{Value-based}, \textbf{Policy-based}, \textbf{Actor Critic} RL Agent}
+        We say an RL agent is
+        \begin{enumerate}
+            \item \emph{value-based} if it has a value function but no policy;\footnotemark[1]
+            \item \emph{policy-based} if it has a policy but no value function; and
+            \item \emph{actor critic} if it has both.
+        \end{enumerate}
+        
+        \noindent
+        \begin{minipage}{\textwidth}
+            \footnotetext[1]{A value-based RL agent \textit{reads off} value function \textit{greedily} to come up with an implicit policy.}
+        \end{minipage}
+    \end{definition}
+
+    \begin{definition}{\textbf{Model-free}, \textbf{Model-based} RL Agent}
+        We say an RL agent is
+        \begin{enumerate}
+            \item \emph{model-free} if it has no model; and
+            \item \emph{model-based} if it has one.
+        \end{enumerate}
+    \end{definition}
+
+    \subsection{Problems within RL}
+
+    There are two fundamental problems in sequential decision making.
+
+    \noindent
+    \begin{tabularx}{\textwidth}{|X|Y|Y|}
+        \hline
+        & RL & Planning \\
+        \hline
+        Environment & initially unknown & a model is known \\
+        \hline
+        Agent & interacts with the environment to improves its policy & performs computation with its model without external interactions to improve policy \\
+        \hline
+    \end{tabularx}
+
+    \np In short,
+    \begin{equation}
+        \text{\textit{RL is like a trial-and-error learning.}}
+    \end{equation}
+    The agent should discover a good policy from its experiences of the environment, without losing too much reward along the way. In doing so, \textit{exploration} finds more information about the environment and \textit{exploitation} exploits known information to maximize reward. We have to balance exploration and exploitation to get the best result.
+
+    \np In RL, we would like to \textit{optimize the future} (i.e. find the best policy). This is called \textit{control}. It turns out we have to make \textit{predictions} (i.e. given a policy, evaluate the future) to do so.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+\end{document}

@@ -1,4 +1,4 @@
-This is XeTeX, Version 3.14159265-2.6-0.99998 (TeX Live 2017/Debian) (preloaded format=xelatex 2021.3.9)  17 MAY 2022 23:08
+This is XeTeX, Version 3.14159265-2.6-0.99998 (TeX Live 2017/Debian) (preloaded format=xelatex 2021.3.9)  18 MAY 2022 00:49
 entering extended mode
  restricted \write18 enabled.
  file:line:error style messages enabled.
@@ -1385,7 +1385,9 @@ Underfull \hbox (badness 10000) in paragraph at lines 57--62
 
 [4
 
-]) [5]
+] [5] [6
+
+]) [7]
 Package atveryend Info: Empty hook `BeforeClearDocument' on input line 17.
 Package atveryend Info: Empty hook `AfterLastShipout' on input line 17.
  (./RL.aux)
@@ -1395,10 +1397,10 @@ Package atveryend Info: Empty hook `AtEndAfterFileList' on input line 17.
 Here is how much of TeX's memory you used:
  34838 strings out of 494945
  661482 string characters out of 6177498
- 727336 words of memory out of 5000000
+ 729334 words of memory out of 5000000
  38166 multiletter control sequences out of 15000+600000
  548838 words of font info for 125 fonts, out of 8000000 for 9000
  36 hyphenation exceptions out of 8191
- 62i,12n,76p,10450b,474s stack positions out of 5000i,500n,10000p,200000b,80000s
+ 62i,13n,76p,10450b,474s stack positions out of 5000i,500n,10000p,200000b,80000s
 
-Output written on RL.pdf (5 pages).
+Output written on RL.pdf (7 pages).

@@ -63,7 +63,7 @@
     \begin{definition}{\textbf{Return}}
         The \emph{return} from step $t$, denoted as $G_t$, is the total discounted reward from $t$:
         \begin{equation*}
-            G_t = \sum^{\infty}_{k=0}\gamma^k R_{t+k+1} = R_t + \gamma R_{t+1} + \gamma^{2}R_{t+2} + \cdots.
+            G_t = \sum^{\infty}_{k=0}\gamma^k R_{t+k+1} = R_{t+1} + \gamma R_{t+2} + \gamma^{2}R_{t+3} + \cdots.
         \end{equation*}
     \end{definition}
 
@@ -76,10 +76,122 @@
     \begin{definition}{\textbf{State Value Function}}
         The \emph{state value function}, denoted as $v\left( s \right)$, of an MRP is the expectation of $G_t$ starting from state $s$:
         \begin{equation*}
-            v\left( s \right) = \EE\left( G_t|S_t=s \right).
+            v\left( s \right) = \EE\left( G_t|S_t=s \right)
+        \end{equation*}
+        for all state $s$.
+    \end{definition}
+
+    \np By defintion, we have
+    \begin{flalign*}
+        && v\left( s \right) & = \EE\left( G_t | S_t=s \right) && \\ 
+        && & = \EE\left( R_{t+1} + \gamma R_{t+2} + \gamma^{2} R_{t+3} + \cdots | S_t=s \right) && \\
+        && & = \EE\left( R_{t+1} + \gamma\left( R_{t+2} + \gamma R_{t+3}+\cdots \right) | S_t=s \right) && \\
+        && & = \EE\left( R_{t+1} + \gamma G_{t+1} | S_t=s \right) && \\
+        && & = \EE\left( R_{t+1} + \gamma v\left( S_{t+1} \right)|S_t=s \right).
+    \end{flalign*}
+    That is, the value function $v\left( s \right)$ has two parts: immediate reward $R_{t+1}$ and discount value of successor state $\gamma v\left( S_{t+1} \right)$. The equation
+    \begin{equation}
+        v\left( s \right) = \EE\left( R_{t+1}+\gamma v\left( S_[t+1] \right)|S_t=s \right)
+    \end{equation}
+    is called the \textit{Bellman equation}. This also can be expressed concisely using matrices:
+    \begin{equation}
+        v = \mR+\gamma\mP v,
+    \end{equation}
+    where $v$ is a column vector with on entry per state. That is,
+    \begin{equation}
+        \begin{bmatrix} v\left( 1 \right)\\\vdots\\v\left( n \right) \end{bmatrix} = \begin{bmatrix} \mR_1\\\vdots\\\mR_n \end{bmatrix} + \gamma
+        \begin{bmatrix}
+            \mP_{11} & \cdots & \mP_{1n} \\
+        	\vdots & \ddots & \vdots \\
+                \mP_{n1} & \cdots & \mP_{nn} \\
+        \end{bmatrix}
+        \begin{bmatrix} v\left( 1 \right)\\\vdots\\v\left( n \right) \end{bmatrix}.
+    \end{equation}
+    [2.3] is a linear equation, which can be solved directly:
+    \begin{equation}
+        v = \left( I_n-\gamma\mP \right)^{-1}\mR.
+    \end{equation}
+    Evaluating [2.4] has time complexity $O\left( n^{3} \right)$, so direct solution is only feasible for small MRPs. Instead, we will shortly look into many iterative (approximation) methods for larger MRPs, such as
+    \begin{enumerate}
+        \item dynamic programming;
+        \item Monte-Carlo evaluation; and
+        \item temporal-difference learning.
+    \end{enumerate}
+    
+    \clearpage
+    \subsection{Markov Decision Process}
+    
+    \begin{definition}{\textbf{Markov Decision Process}}
+        A \emph{Markov decision process} (\emph{MDP}) is a tuple $\left( \mS,\mA,\mP,\mR,\gamma \right)$ such that
+        \begin{enumerate}
+            \item $\left( \mS,\mP,\mR,\gamma \right)$ is a MRP with additional properties
+                \begin{equation*}
+                    \mP_{ss'}^a = \PP\left( S_{t+1}=s'|S_t=s, A_t=a \right)
+                \end{equation*}
+                and
+                \begin{equation*}
+                    \mR^a_{s} = \EE\left( R_{t+1}|S_t=s, A_t=a \right)
+                \end{equation*}
+                for all states $s,s'$ and action $a$; and
+            \item $\mA$ is a (finite) set of actions.
+        \end{enumerate}
+    \end{definition}
+
+    In short, a MDP is a MRP with decisions.
+
+    \begin{definition}{\textbf{Policy}}
+        A (stochastic) \emph{policy} $\pi$ is a distribution over actions given states,
+        \begin{equation*}
+            \pi\left( a|s \right) = \PP\left( A_t=a|S_t=s \right)
+        \end{equation*}
+        for all $a\in\mA,s\in\mS$.
+    \end{definition}
+
+    \np A policy fully characterizes the behavior of an agent. In an MDP, policies depend on the current state but not the whole history. In particular, policies are \textit{stationary} (i.e. time-independent). That is, given any $t,t'>0$,
+    \begin{equation*}
+        \PP\left( A_{t'}=a|S_{t'}=s \right) = \PP\left( A_t=a|S_t=s \right).
+    \end{equation*}
+
+    \np Suppose that an MDP $\mM = \left( \mS,\mA,\mP,\mR,\gamma \right)$ and a policy $\pi$ are given. Then the state sequence $\left( S_{t} \right)^{}_{t}$ is a Markov process $\left( \mS,\mP^{\pi} \right)$ and the state and reward sequence $\left( \left( S_t,R_t \right) \right)_t$ is a MRP $\left( \mS,\mP^{\pi},\mR^{\pi},\gamma \right)$, where
+    \begin{equation*}
+        \mP^{\pi}_{s,s'} = \sum^{}_{a\in\mA} \pi\left( a|s \right)\mP^a_{s,s'}
+    \end{equation*}
+    and
+    \begin{equation*}
+        \mR^{\pi}_s = \sum^{}_{a\in\mA} \pi\left( a|s \right)\mR^a_s.
+    \end{equation*}
+    This leads to the following two definitions.
+
+    \begin{definition}{\textbf{State-value Function} of an MDP}
+        The \emph{state-value function}, denoted as $v_{\pi}\left( s \right)$, of an MDP is the expectation of return starting from state $s$ and then following policy $\pi$:
+        \begin{equation*}
+            v_{\pi}\left( s \right) = \EE_{\pi}\left( G_t|S_t=s \right).
         \end{equation*}
     \end{definition}
 
+    \begin{definition}{\textbf{Action-value Function} of an MDP}
+        The \emph{action-value function} $q_{\pi}\left( s,a \right)$ is the expected return starting from state $s$, taking action $a$, and ten following policy $\pi$:
+        \begin{equation*}
+            q_{\pi}\left( s,a \right) = \EE_{\pi}\left( G_t|S_t=s, A_t=a \right).
+        \end{equation*}
+    \end{definition}
+
+    \np Similar to [2.1], we can decompose the state-value function $v_{\pi}\left( s \right)$ and the action-value function $q_{\pi}\left( s,a \right)$ into two parts:
+    \begin{equation}
+        v_{\pi}\left( s \right) = \EE_{\pi}\left( R_{t+1}+\gamma v_{\pi}\left( S_{t+1} \right) | S_t=s \right)
+    \end{equation}
+    and
+    \begin{equation}
+        q_{\pi}\left( s,a \right) = \EE_{\pi}\left( R_{t+1}+\gamma q_{\pi}\left( S_{t+1},A_{t+1} \right)|S_t=s,A_t=a \right).
+    \end{equation}
+    Writing [2.5] in matrix notation gives
+    \begin{equation}
+        v_{\pi} = \mR^{\pi} + \gamma\mP^{\pi}v_{\pi}
+    \end{equation}
+    with an explicit solution
+    \begin{equation}
+        v_{\pi} = \left( I_n-\gamma\mP^{\pi} \right)^{-1}\mR^{\pi}.
+    \end{equation}
 
 
 
@@ -109,11 +221,11 @@
 
 
 
-
-
-
-
-
+    
+    
+    
+    
+    
     
     
     

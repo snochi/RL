@@ -164,10 +164,110 @@
    \rruleline
 
    \np If we know the solution to subproblems $v_{*}\left( s' \right)$, then solution $v_{*}\left( s \right)$ can be found by one-step lookahead:
-   \begin{equation*}
+   \begin{equation}
        v_{*}\left( s \right) \leftarrow \max_{a\in\mA} \mR^a_s + \gamma \sum^{}_{s'\in\mS}\mP^a_{ss'}v_{*}\left( s' \right).
-   \end{equation*}
+   \end{equation}
    The idea of value iteration is to apply these updates iteratively: start with final rewards and work backwords. This still works with loopy, stochastic MDPs.
+
+   \np Unlike policy iteration, there is no explicit policy. Instead, we use synchronous backups (Algorithm 3.1),
+    
+    \begin{algorithm}{Synchronous Backup}
+        \FOR{each iteration $k+1$}
+        \FOR{all $s\in\mS$}
+        \DO{update $v_{k+1}\left( s \right)$ from $v_k\left( s' \right)$, where $s'$ is a successor state of $s$}
+    \end{algorithm}
+    
+    \np\noindent
+    to update value function:
+    \begin{equation*}
+        v_1 \to v_2 \to \cdots \to v_*.
+    \end{equation*}
+    Convergence to $v_*$ is guaranteed, and intermediate value functions $v_1,\ldots$ may not correspond to any policy. In vector form, the update ([3.9]) is given by
+    \begin{equation}
+        v_{k+1} = \max_{a\in A} \mR^a + \gamma\mP^a v_k.
+    \end{equation}
+
+    \subsection{Summary}
+    
+    \noindent
+    \begin{tabularx}{\textwidth}{|c|Y|c|}
+        \hline
+        problem & Bellman equation & algorithm \\
+        \hline
+        prediction & Bellman expectation equation & iterative policy evaluation \\
+        \hline
+        control & Bellman expectation equation and greedy policy improvement & policy iteration \\
+        \hline
+        control & Bellman optimality equation & value iteration \\
+        \hline
+    \end{tabularx}
+
+    \np Algorithms are based on state-value function $v_{\pi}$ or $v_*$ with complexity $O\left( mn^{2} \right)$ per iteration for $m$ actions and $n$ states. The same idea also applies to action-value function $q_{\pi}$ or $q_*$, but doing so has higher complexity $O\left( m^{2}n^{2} \right)$ per iteration.
+    
+    \subsection{Extensions to Dynamic Programming}
+
+    DP methods described so far used \textit{synchronous} backups (i.e. all states are backed up in parallel). \textit{Asynchronous} DP backs up states individually, in any order: for each selected state, apply the appropriate backup. This can significantly reduce computation and is guaranteed to converge if all states continue to be selected.
+
+    We have three simple ideas for asynchronous DP:
+    \begin{enumerate}
+        \item in-place DP;
+        \item prioritized sweeping; and
+        \item real-time DP.
+    \end{enumerate}
+
+    \begin{boxy}{\stfont In-place DP}
+        Synchronous value iteration stores two copies, $v_{k},v_{k+1}$ of value function in any given time:
+        \begin{equation}
+            v_{k+1}\left( s \right) \leftarrow \max_{a\in\mA} \mR^a_s + \gamma \sum^{}_{s'\in\mS}\mP^a_{ss'}v_{k}\left( s' \right).
+        \end{equation}
+        In-place value iteration only stores one copy of value function:
+        \begin{equation}
+            v\left( s \right) \leftarrow \max_{a\in\mA} \mR^a_s + \gamma \sum^{}_{s'\in\mS}\mP^a_{ss'}v\left( s' \right).
+        \end{equation}
+        In case $v\left( s' \right)$ is not updated, addition of the term $\gamma\mP^a_{ss'}v\left( s' \right)$ is identical to what is being done in [3.11]. Otherwise, if $v\left( s' \right)$ is updated, then instead of using \textit{old} value $v_k\left( s' \right)$, we use the \textit{updated} value $v\left( s' \right)$. 
+
+        Now the important part is to order the states so that the updates according to [3.12] can be done in an efficient manner. 
+    \end{boxy}
+
+    \np Prioritized sweeping extends the idea of in-place DP.
+
+    \begin{boxy}{\stfont Prioritized Sweeping}
+        In in-place DP, we have seen that it is crucial to correctly set up the order of states. Prioritized sweeping achieves this by maintaining a priority queue of states, sorted by the decreasing order of Bellman error:
+        \begin{equation}
+            \left| \left( \max_{a\in\mA} \mR^a_s + \gamma\sum^{}_{s'\in\mS}\mP^a_{ss'}v\left( s' \right) \right) - v\left( s \right) \right|.
+        \end{equation}
+        Roughly speaking, we have:
+
+        \begin{algorithm}{Prioritized Sweeping}
+            \INPUT{states $\left( s_{i} \right)^{}_{i\in I}$}
+            \DO{maintain a priority queue $Q$ of $\left( s_{i} \right)^{}_{i\in I}$ according to [3.13]}
+            \WHILE{not done}
+            \DO{backup the state with the largest remaining error}
+            \DO{update Bellman error of affected states}
+            \DO{update $Q$}
+        \end{algorithm}
+        \clearpage
+
+        \np For instance, when we are doing synchronous update (using $0$ as the initial value for every state), it takes some time for the goal to propagate and change $v\left( s \right)$ to a nonzero value. To avoid thousands of \textit{updates} on $v\left( s \right)$ from $0$ to $0$, we only choose the  states where updating $v\left( s \right)$ is meaningful.
+    \end{boxy}
+    
+    \begin{boxy}{\stfont Real-time DP}
+        The idea is to update only states that are relevant to agent (i.e. select only the states which the agent visits). Instead of updating every state naively, run the agent in the world, collect some samples, and update around those samples. That is, after each step $\left( S_t,A_t,R_{t+1} \right)$, backup the state $S_t$ according to
+        \begin{equation}
+            v\left( S_t \right) \leftarrow \max_{a\in\mA} \left( \mR^a_{S_t}+\gamma\sum^{}_{s'\in\mS}\mP^a_{S_ts'}v\left( s' \right) \right).
+        \end{equation}
+    \end{boxy}
+    
+    \np DP uses \textit{full-width} backups. That is, for each (synchronous or asynchronous) backup, every successor state and action is considered using knowledge of the MDP transitions and reward function.
+
+    DP is effective for medium-sized problems with millions of states. But for large problems, DP suffers \textit{Bellman's curse of dimensionality}: number of states $\left| \mS \right|$ grows exponentially with number of state variables and even one backup becomes too expensive.
+
+    To resolve this issue, we use \textit{sampling}. Instead of considering the whole branching factor, we simply sample few trajectories. This will be the topic we will consider shortly. We are going to use sample rewards and sample transitions $\left( S,A,R,S' \right)$ instead of reward fucntion $\mR$ and transition dynamics $\mP$. This has few advantages:
+    \begin{enumerate}
+        \item no advance knowledge of MDP is required; and\hfill\textit{model-free}
+        \item breaks the curse of dimensionality through sampling: cost of backup is constant, independent of $\left| \mS \right|$.
+    \end{enumerate}
+
     
     
     

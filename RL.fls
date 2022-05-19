@@ -327,4 +327,6 @@ INPUT /usr/share/texlive/texmf-dist/fonts/tfm/public/mnsymbol/MnSymbolS9.tfm
 INPUT /usr/share/texlive/texmf-dist/fonts/tfm/public/mnsymbol/MnSymbolS5.tfm
 INPUT 2.tex
 INPUT 2.tex
+INPUT 3.tex
+INPUT 3.tex
 INPUT RL.aux

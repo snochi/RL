@@ -1,0 +1,209 @@
+\documentclass[RL]{subfiles}
+
+%% ========================================================
+%% document
+
+\begin{document}
+
+    \section{Planning by Dynamic Programming}
+
+    Starting from this section, we will focus on discussing \textit{solution methods} to MDPs.
+
+    \subsection{Introduction}
+
+    What is \textit{dynamic programming}?
+
+    The word \textit{dynamic} stands for \textit{sequential or temporal component} to the problem and \textit{programming} stands for \textit{optimizing a program} (e.g. optimizing a policy for RL).
+
+    \begin{boxy}{\stfont Dynamic Programming}
+        Given a complex problem,
+        \begin{enumerate}
+            \item break it down into subproblems;
+            \item solve the subproblems; and
+            \item combine solutions to subproblems.
+        \end{enumerate}
+    \end{boxy}
+
+    \np To apply dynamic programming, the program of concern must have two properties: 
+    \begin{enumerate}
+        \item optimal substructure on where \textit{principle of optimality} applies; and
+        \item overlapping subproblems -- the subproblems occur many times; we gain something from breaking down the problem into subproblems and by solving those subproblems we solve things more efficiently than attacking the overall problem.
+    \end{enumerate}
+
+    \begin{statement}{Principle of Optimality}
+        The subsolutions of an optimal solution of the problem are optimal solutions for the corresponding subproblems.
+    \end{statement}
+
+    \rruleline
+    
+    \np MDPs satisfy both properties. In fact, Bellman equation gives recursive decomposition which gives the properties we are after and value function stores and reuses solutions. The value function of a state tells us the optimal solution from that state onwards.  \np When we apply dynamic programming (at least on the theoretical level), we assume full knowledge of the MDP, and use it for \textit{planning}. For prediction: \begin{equation*}
+        \begin{aligned}
+            \text{input} & - \text{MDP $\left( \mS,\mA,\mP,\mR,\gamma \right)$ and policy $\pi$,} \\
+            \text{output} & - \text{value function $v_{\pi}$.}
+        \end{aligned} 
+    \end{equation*}
+    For control:
+    \begin{equation*}
+        \begin{aligned}
+            \text{input} & - \text{MDP $\left( \mS,\mA,\mP,\mR,\gamma \right)$,} \\
+            \text{output} & - \text{optimal value function $v_{*}$ and optimal policy $\pi_*$.}
+        \end{aligned} 
+    \end{equation*}
+    Before we discuss applying dynamic programming on MDPs in depth, here are some applications of dynamic programming in other areas.
+
+    \begin{example}{Applications of Dynamic Programming}
+        \vspace{-11pt}
+        \begin{enumerate}
+            \item Scheduling algorithms.
+            \item String algorithms (e.g. sequence alignment).
+            \item Graph algorithms (e.g. shortest path).
+            \item Graphical methods (e.g. Viterbi algorithm).
+            \item Bioinformatics (e.g. lattice models).
+        \end{enumerate}
+    \end{example}
+
+    \rruleline
+    
+    \clearpage
+
+    \subsection{Policy Evaluation}
+
+    We are going to consider the following problem:
+    \begin{equation}
+        \begin{aligned}
+            \text{given} & : \text{a policy $\pi$} \\
+            \text{find} & : \text{iterative application of Bellman expectation backup.}
+        \end{aligned} 
+    \end{equation}
+    We will start from an arbitrary \textit{value function} $v_1$ and update it over and over until we \textit{converge} to a true value function $v_{\pi}$:
+    \begin{equation*}
+        v_1 \to \cdots \to v_{\pi}.
+    \end{equation*}
+    Convergence to $v_\pi$ will be proven at the end of this section. We can choose to do \textit{synchronous} backups.
+
+    \begin{algorithm}{Synchronous Backup}
+        \FOR{each iteration $k+1$}
+        \FOR{all $s\in\mS$}
+        \DO{update $v_{k+1}\left( s \right)$ from $v_k\left( s' \right)$, where $s'$ is a successor state of $s$}
+    \end{algorithm}
+        
+    \np\noindent We will discuss \textit{acynchronous} backups later.
+
+    \np In synchronous backup, we update $v_{k+1}$ as follows:
+    \begin{equation}
+        v_{k+1} = \mR^{\pi} + \gamma\mP^{\pi}v_k.
+    \end{equation}
+
+    \subsection{Policy Iteration}
+    
+    Now that we know how to evaluate a polic, we are going to update policy over and over to find a best policy.
+
+    Suppose that a policy $\pi$ is given. How can we produce a new policy that is better than $\pi$?
+
+    \begin{algorithm}{A Single Policy Iteration}
+        \INPUT{a policy $\pi$}
+        \DO{policy evaluation: evaluate $\pi$ according to}
+        \begin{equation}
+            v_{\pi}\left( s \right) = \EE\left( R_{t+1}+\gamma R_{t+2}+\cdots | S_t=s \right).
+        \end{equation}
+        \DO{policy improvement: improve $\pi$ by acting greedily with respect to $v_{\pi}$}
+    \end{algorithm}
+    
+    \np\noindent
+    In general, we need some (large) number of iterations until we converge to $\pi_*$, but the convergence is \textit{guaranteed}.
+
+    This is what it means to act \textit{greedily} with respect to $v_{\pi}$: given a deterministic policy $\pi\left( s \right)$, we define
+    \begin{equation}
+        \pi'\left( s \right) = \argmax_{a\in\mA} q_{\pi}\left( s,a \right).
+    \end{equation}
+    This improves the value from any state $s$ over one step:
+    \begin{equation}
+        q_{\pi}\left( s,\pi'\left( s \right) \right) = \max_{a\in\mA} q_{\pi}\left( s,a \right) \geq q_{\pi}\left( s,\pi\left( s \right) \right) = v_{\pi}\left( s \right).
+    \end{equation}
+    Consequently, an inductive argument shows that
+    \begin{flalign*}
+        && v_{\pi}\left( s \right) & \leq q_{\pi}\left( s,\pi'\left( s \right) \right)  && \\ 
+        && & = \EE_{\pi'}\left( R_{t+1}+\gamma v_{\pi}\left( S_{t+1} \right)|S_t=s \right) && \\
+        && & \leq \EE_{\pi'}\left( R_{t+1}+\gamma q_{\pi}\left( S_{t+1},\pi'\left( S_{t+1} \right) \right)|S_t=s \right) && \\
+        && & \leq \EE_{\pi'}\left( R_{t+1} + \gamma R_{t+2} + \gamma^{2}q_{\pi}\left( S_{t+2},\pi'\left( S_{t+2} \right) \right)|S_t=s \right) && \\
+        && & \leq \cdots && \\
+        && & \leq \EE_{\pi'}\left( R_{t+1}+\gamma R_{t+2}+\cdots|S_t=s \right) = v_{\pi'}\left( s \right).
+    \end{flalign*}
+    In short:
+    \begin{equation}
+        v_{\pi} \leq v_{\pi'}.
+    \end{equation}
+    When improvements stop, then [3.5] holds with an equality,
+    \begin{equation}
+        q_{\pi}\left( s,\pi'\left( s \right) \right) = \max_{a\in\mA} q_{\pi}\left( s,a \right) = q_{\pi}\left( s,\pi\left( s \right) \right) = v_{\pi}\left( s \right),
+    \end{equation}
+    which is precisely the Bellman optimality equation (see [2.9])
+    \begin{equation}
+        v_{\pi}\left( s \right) = \max_{a\in\mA} q_{\pi}\left( s,a \right).
+    \end{equation}
+    Thus it follows that $v_{\pi} = v_{*}$.
+
+    \np Often times even with a crude approximation of $v_{\pi}$, we can still obtain a very close approximation of $\pi$. This means much of the iterations onwards could become wasteful. Instead, we can impose a stopping condition. For instance, we can use $\varep$-convergence: stop when the update in value function is less than $\pi$. More naively, we can fix some $k\in\N$ and stop after $k$ iterations. An extreme case of this is when we have $k=1$ -- we update policy \textit{every iteration}. We will see shortly that this is equivalent to \textit{value iteration}, which is the topic of the next subsection.
+
+   \subsection{Value Iteration}
+
+   Any optimal policy can be subdivided into two components:
+   \begin{enumerate}
+       \item an optimal first action $A_*$; and
+        \item a following optimal policy from successor state $S'$.
+   \end{enumerate}
+    
+   \begin{theorem}{Principle of Optimality for Policies}
+       Any policy $\pi\left( a|s \right)$ achieves the optimal value from state $s$,
+       \begin{equation*}
+           v_{\pi}\left( s \right) = v_{*}\left( s \right),
+       \end{equation*}
+       if and only if for every state $s'$ reachable from $s$, $\pi$ achieves the optimal value on $s'$, $v_{\pi}\left( s' \right)=v_{*}\left( s \right)$.
+   \end{theorem}
+
+   \rruleline
+
+   \np If we know the solution to subproblems $v_{*}\left( s' \right)$, then solution $v_{*}\left( s \right)$ can be found by one-step lookahead:
+   \begin{equation*}
+       v_{*}\left( s \right) \leftarrow \max_{a\in\mA} \mR^a_s + \gamma \sum^{}_{s'\in\mS}\mP^a_{ss'}v_{*}\left( s' \right).
+   \end{equation*}
+   The idea of value iteration is to apply these updates iteratively: start with final rewards and work backwords. This still works with loopy, stochastic MDPs.
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+
+\end{document}

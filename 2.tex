@@ -91,7 +91,7 @@
     \end{flalign*}
     That is, the value function $v\left( s \right)$ has two parts: immediate reward $R_{t+1}$ and discount value of successor state $\gamma v\left( S_{t+1} \right)$. The equation
     \begin{equation}
-        v\left( s \right) = \EE\left( R_{t+1}+\gamma v\left( S_[t+1] \right)|S_t=s \right)
+        v\left( s \right) = \EE\left( R_{t+1}+\gamma v\left( S_{t+1} \right)|S_t=s \right)
     \end{equation}
     is called the \textit{Bellman equation}. This also can be expressed concisely using matrices:
     \begin{equation}
@@ -119,7 +119,7 @@
     \end{enumerate}
     
     \clearpage
-    \subsection{Markov Decision Process}
+    \subsection{Markov Decision Processes}
     
     \begin{definition}{\textbf{Markov Decision Process}}
         A \emph{Markov decision process} (\emph{MDP}) is a tuple $\left( \mS,\mA,\mP,\mR,\gamma \right)$ such that
@@ -162,14 +162,12 @@
     \end{equation*}
     This leads to the following two definitions.
 
-    \begin{definition}{\textbf{State-value Function} of an MDP}
-        The \emph{state-value function}, denoted as $v_{\pi}\left( s \right)$, of an MDP is the expectation of return starting from state $s$ and then following policy $\pi$:
+    \begin{definition}{\textbf{State-value Function}, \textbf{Action-value Function} of an MDP}
+        The \emph{state-value function} $v_{\pi}\left( s \right)$ of an MDP is the expectation of return starting from state $s$ and then following policy $\pi$:
         \begin{equation*}
             v_{\pi}\left( s \right) = \EE_{\pi}\left( G_t|S_t=s \right).
         \end{equation*}
-    \end{definition}
 
-    \begin{definition}{\textbf{Action-value Function} of an MDP}
         The \emph{action-value function} $q_{\pi}\left( s,a \right)$ is the expected return starting from state $s$, taking action $a$, and ten following policy $\pi$:
         \begin{equation*}
             q_{\pi}\left( s,a \right) = \EE_{\pi}\left( G_t|S_t=s, A_t=a \right).
@@ -193,6 +191,58 @@
         v_{\pi} = \left( I_n-\gamma\mP^{\pi} \right)^{-1}\mR^{\pi}.
     \end{equation}
 
+    \begin{definition}{\textbf{Optimal State-value Function}, \textbf{Optimal Action-value Function} of an MDP}
+        The \emph{optimal state-value function} $v_{*}\left( s \right)$ is the maximum state-value function over all policies:
+        \begin{equation*}
+            v_{*}\left( s \right) = \max_{\pi} v_{\pi}\left( s \right).
+        \end{equation*}
+
+        The \emph{optimal action-value function} $q_{*}\left( s,a \right)$ is the maximum action-value function over all policies:
+        \begin{equation*}
+            q_{*}\left( s,a \right) = \max_{\pi} q_{\pi}\left( s,a \right).
+        \end{equation*}
+    \end{definition}
+
+    \np We can define the following partial order on policies that captures the idea of \textit{a policy better than another}: we write
+    \begin{equation*}
+        \pi\geq\pi' 
+    \end{equation*}
+    if for every $s\in\mS$, $v_{\pi}\left( s \right)\geq v_{\pi'}\left( s \right)$. The following theorem concerns this partial order.
+
+    \begin{theorem}{}
+        For any MDP,
+        \begin{enumerate}
+            \item there is an optimal policy $\pi_{*}$ such that $\pi_{*}\geq \pi$ for all policy $\pi$; and
+            \item any optimal policy $\pi_*$ achieve the optimal state-vaue function, 
+                \begin{equation*}
+                    v_{\pi_*} = v_*,
+                \end{equation*}
+                and the optimal action-value function,
+                \begin{equation*}
+                    q_{\pi_*} = q_*.
+                \end{equation*}
+        \end{enumerate}
+    \end{theorem}
+
+    \rruleline
+
+    \np The optimal value functions are recursively related by the Bellman optimality equations:
+    \begin{equation}
+        v_*\left( s \right) = \max_{a} q_*\left( s,a \right)
+    \end{equation}
+    and
+    \begin{equation}
+        q_*\left( s,a \right) = \mR^a_s + \gamma\sum^{}_{s'\in\mS}\mP^a_{ss'}v_*\left( s' \right).
+    \end{equation}
+    This means
+    \begin{equation}
+        v_*\left( s \right) = \max_a \mR^a_s + \gamma\sum^{}_{s'\in\mS}\mP^a_{ss'}v_*\left( s' \right)
+    \end{equation}
+    and
+    \begin{equation}
+        q_*\left( s,a \right) = \mR^a_s + \gamma\sum^{}_{s'\in\mS} \mP^a_{ss'} \max_{a'}q_*\left( s',a' \right).
+    \end{equation}
+    [2.9] and [2.10] are non-linear, and they do not have no closed form solution in general. Instead, we use iterative approximation methods.
 
 
 
@@ -221,6 +271,9 @@
 
 
 
+
+    
+    
     
     
     
